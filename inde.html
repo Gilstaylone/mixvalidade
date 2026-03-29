@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mix Validade - PCEP | Neon Analytics Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #11111a; --bg-tertiary: #1a1a25;
+            --bg-card: #161620; --bg-hover: #1f1f2e;
+            --neon-blue: #00d4ff; --neon-purple: #9d50ff; --neon-pink: #ff2a6d;
+            --neon-green: #00f5a0; --neon-yellow: #ffcc00; --neon-orange: #ff8a00;
+            --success: #00d4aa; --warning: #ffb800; --danger: #ff4757;
+            --danger-bg: rgba(255, 71, 87, 0.15);
+            --text-primary: #ffffff; --text-secondary: #a0a0b0; --text-muted: #666680;
+            --border-color: #2a2a3a; --border-glow: 0 0 20px rgba(157, 80, 255, 0.3);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --glow-blue: 0 0 25px rgba(0, 212, 255, 0.4); --glow-purple: 0 0 25px rgba(157, 80, 255, 0.4);
+            --radius: 16px; --radius-sm: 10px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::selection { background: var(--neon-purple); color: white; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: radial-gradient(ellipse at top, #1a1a2e 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom right, rgba(157, 80, 255, 0.1) 0%, transparent 50%),
+                        var(--bg-primary);
+            color: var(--text-primary); line-height: 1.6; min-height: 100vh; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        .orb { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.4; z-index: 0; animation: float 20s infinite ease-in-out; }
+        .orb-1 { width: 400px; height: 400px; background: var(--neon-purple); top: -100px; right: -100px; animation-delay: 0s; }
+        .orb-2 { width: 300px; height: 300px; background: var(--neon-blue); bottom: -50px; left: -50px; animation-delay: -10s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -30px) scale(1.05); } 50% { transform: translate(-20px, 20px) scale(0.95); } 75% { transform: translate(20px, 10px) scale(1.02); } }
+
+        .header {
+            background: rgba(22, 22, 32, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color); padding: 1rem 2rem;
+            position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand { display: flex; align-items: center; gap: 1rem; }
+        .brand-logo {
+            width: 44px; height: 44px; background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.2rem; color: white; box-shadow: var(--glow-purple); position: relative; overflow: hidden;
+        }
+        .brand-logo::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+        .brand-text h1 {
+            font-size: 1.3rem; font-weight: 600;
+            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .brand-text span { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .header-actions { display: flex; align-items: center; gap: 0.5rem; }
+        .status-pill {
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem;
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: 20px; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite; }
+        .status-dot.error { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .status-dot.loading { background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.9); } }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;
+            border-radius: 10px; font-weight: 500; font-size: 0.85rem; cursor: pointer;
+            transition: var(--transition); border: 1px solid transparent;
+            background: var(--bg-tertiary); color: var(--text-primary);
+        }
+        .btn:hover { background: var(--bg-hover); border-color: var(--border-color); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            border: none; box-shadow: var(--glow-purple);
+        }
+        .btn-primary:hover { box-shadow: 0 0 35px rgba(157, 80, 255, 0.6); transform: translateY(-2px); }
+        .btn-success { background: var(--success); color: #000; border: none; }
+        .btn-success:hover { background: #00e6b8; box-shadow: 0 0 20px rgba(0, 212, 170, 0.4); }
+        .btn-danger { background: var(--danger); color: white; border: none; }
+        .btn-danger:hover { background: #ff6b7a; box-shadow: 0 0 20px rgba(255, 71, 87, 0.4); }
+        .btn-outline { background: transparent; border-color: var(--border-color); }
+        .btn-outline:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+        .container { max-width: 1800px; margin: 0 auto; padding: 1.5rem 2rem; position: relative; z-index: 1; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius);
+            padding: 1.25rem; transition: var(--transition); position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue));
+            opacity: 0; transition: var(--transition);
+        }
+        .stat-card:hover { border-color: var(--neon-purple); box-shadow: var(--border-glow); transform: translateY(-3px); }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card.success { border-left: 3px solid var(--success); }
+        .stat-card.warning { border-left: 3px solid var(--warning); }
+        .stat-card.danger { border-left: 3px solid var(--danger); }
+
+        .stat-icon {
+            width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 0.75rem; font-size: 1.1rem;
+        }
+        .stat-icon.blue { background: rgba(0, 212, 255, 0.15); color: var(--neon-blue); }
+        .stat-icon.green { background: rgba(0, 212, 170, 0.15); color: var(--success); }
+        .stat-icon.yellow { background: rgba(255, 184, 0, 0.15); color: var(--warning); }
+        .stat-icon.red { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
+
+        .stat-label {
+            font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.08em; font-weight: 600; margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 1.8rem; font-weight: 700; color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace; margin-bottom: 0.25rem;
+        }
+        .stat-sub { font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; }
+        .stat-sub.positive { color: var(--success); }
+        .stat-sub.negative { color: var(--danger); }
+        .stat-percent {
+            font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px;
+            background: var(--bg-tertiary); color: var(--neon-blue); font-family: 'JetBrains Mono', monospace;
+        }
+
+        .zones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .zone-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius);
+            padding: 1.25rem; transition: var(--transition);
+        }
+        .zone-card:hover { border-color: var(--neon-blue); box-shadow: 0 0 30px rgba(0, 212, 255, 0.15); }
+        .zone-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);
+        }
+        .zone-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.95rem; }
+        .zone-title i { font-size: 1rem; }
+        .zone-title.green i { color: var(--success); }
+        .zone-title.yellow i { color: var(--warning); }
+        .zone-title.red i { color: var(--danger); }
+        .zone-title.gray i { color: var(--text-muted); }
+        .zone-badge {
+            padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .zone-badge.green { background: rgba(0, 212, 170, 0.15); color: var(--success); }
+        .zone-badge.yellow { background: rgba(255, 184, 0, 0.15); color: var(--warning); }
+        .zone-badge.red { background: var(--danger-bg); color: var(--danger); }
+        .zone-badge.gray { background: var(--bg-tertiary); color: var(--text-muted); }
+        .zone-progress {
+            height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;
+            margin-bottom: 0.75rem; position: relative;
+        }
+        .zone-progress::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .zone-progress-bar { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .zone-progress-bar.green { background: linear-gradient(90deg, var(--success), #00ffc8); box-shadow: 0 0 15px rgba(0, 212, 170, 0.4); }
+        .zone-progress-bar.yellow { background: linear-gradient(90deg, var(--warning), #ffd966); box-shadow: 0 0 15px rgba(255, 184, 0, 0.4); }
+        .zone-progress-bar.red { background: linear-gradient(90deg, var(--danger), #ff7788); box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
+        .zone-progress-bar.gray { background: var(--text-muted); opacity: 0.5; }
+        .zone-stats { display: flex; justify-content: space-between; align-items: center; }
+        .zone-count { font-size: 1.4rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+        .zone-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        .critical-banner {
+            background: linear-gradient(135deg, var(--danger-bg), rgba(255, 71, 87, 0.08));
+            border: 1px solid rgba(255, 71, 87, 0.3); border-radius: var(--radius);
+            padding: 1rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;
+            animation: borderPulse 3s infinite;
+        }
+        @keyframes borderPulse { 0%, 100% { border-color: rgba(255, 71, 87, 0.3); } 50% { border-color: rgba(255, 71, 87, 0.6); } }
+        .critical-banner i { font-size: 1.4rem; color: var(--danger); animation: shake 0.5s infinite; }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        .critical-banner-content h4 { font-weight: 600; color: var(--text-primary); margin-bottom: 0.2rem; }
+        .critical-banner-content p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        .toolbar {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius);
+            padding: 1rem 1.5rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;
+        }
+        .search-box { flex: 1; min-width: 280px; position: relative; }
+        .search-box i {
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); transition: var(--transition);
+        }
+        .search-box input {
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; background: var(--bg-tertiary);
+            border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.9rem;
+            color: var(--text-primary); font-family: 'Inter', sans-serif; transition: var(--transition);
+        }
+        .search-box input:focus {
+            outline: none; border-color: var(--neon-blue);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+        }
+        .search-box input:focus + i { color: var(--neon-blue); }
+        .filter-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 0.5rem 1rem; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);
+            cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 0.4rem;
+        }
+        .filter-btn:hover { background: var(--bg-hover); border-color: var(--neon-blue); color: var(--neon-blue); }
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            border: none; color: white; box-shadow: var(--glow-purple);
+        }
+        .filter-btn.danger.active { background: var(--danger); box-shadow: 0 0 20px rgba(255, 71, 87, 0.4); }
+
+        .table-container {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem;
+        }
+        .table-header {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary);
+        }
+        .table-title { font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .table-actions { display: flex; gap: 0.5rem; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: var(--bg-tertiary); position: sticky; top: 0; z-index: 10; }
+        th {
+            padding: 1rem 1.25rem; text-align: left; font-weight: 600; color: var(--text-muted);
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace;
+        }
+        td {
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary);
+        }
+        tbody tr { transition: var(--transition); }
+        tbody tr:hover { background: var(--bg-hover); }
+        tbody tr.critical { background: linear-gradient(135deg, var(--danger-bg), transparent); border-left: 3px solid var(--danger); }
+        tbody tr.warning-row { background: linear-gradient(135deg, rgba(255, 184, 0, 0.1), transparent); border-left: 3px solid var(--warning); }
+
+        .code-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--neon-blue); }
+        .expiry-date { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .expiry-date.expired { color: var(--danger); text-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
+        .expiry-date.soon { color: var(--warning); }
+        .expiry-date.safe { color: var(--success); }
+
+        .status-badge {
+            padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 0.4rem; font-family: 'JetBrains Mono', monospace;
+        }
+        .status-badge.ok { background: rgba(0, 212, 170, 0.15); color: var(--success); border: 1px solid rgba(0, 212, 170, 0.3); }
+        .status-badge.warning { background: rgba(255, 184, 0, 0.15); color: var(--warning); border: 1px solid rgba(255, 184, 0, 0.3); }
+        .status-badge.danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .status-badge.blocked { background: rgba(157, 80, 255, 0.15); color: var(--neon-purple); border: 1px solid rgba(157, 80, 255, 0.3); }
+
+        .action-btn {
+            padding: 0.4rem 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;
+            transition: var(--transition); display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .action-btn:hover { background: var(--neon-purple); color: white; border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(157, 80, 255, 0.4); }
+        .action-btn.danger:hover { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: var(--transition);
+        }
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        .loader {
+            width: 60px; height: 60px; border: 3px solid var(--border-color);
+            border-top-color: var(--neon-blue); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 1.5rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .empty-state i { font-size: 3rem; color: var(--border-color); margin-bottom: 1rem; opacity: 0.5; }
+
+        .footer {
+            text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace; border-top: 1px solid var(--border-color);
+            margin-top: 2rem; background: var(--bg-secondary);
+        }
+        .footer strong { color: var(--neon-blue); }
+
+        @media (max-width: 768px) {
+            .header { padding: 1rem; flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: space-between; }
+            .container { padding: 1rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .search-box { min-width: 100%; }
+            th, td { padding: 0.75rem 1rem; font-size: 0.85rem; }
+            .zone-card { padding: 1rem; }
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeInUp 0.4s ease forwards; }
+        .animate-in:nth-child(1) { animation-delay: 0.1s; }
+        .animate-in:nth-child(2) { animation-delay: 0.15s; }
+        .animate-in:nth-child(3) { animation-delay: 0.2s; }
+        .animate-in:nth-child(4) { animation-delay: 0.25s; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+        
+        /* Estilos adicionais para upload de arquivo */
+        .file-upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            background: var(--bg-tertiary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .file-upload-zone:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 212, 255, 0.05);
+        }
+        .file-upload-zone.dragover {
+            border-color: var(--neon-purple);
+            background: rgba(157, 80, 255, 0.1);
+        }
+        .file-upload-zone i {
+            font-size: 2.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 1rem;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: var(--danger); }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay active" id="loadingOverlay">
+        <div class="loader"></div>
+        <div class="loading-text">🔄 Carregando dados da planilha...</div>
+    </div>
+
+    <!-- Modal de Importação -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-file-csv"></i> Importar CSV</h3>
+                <button class="modal-close" onclick="closeImportModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="file-upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Clique para selecionar ou arraste um arquivo CSV</p>
+                <small style="color: var(--text-muted);">Formato esperado: Depósito, Código, Descrição, Validade, Disponível, Avaria, Bloqueado, Giro/Dia</small>
+            </div>
+            <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="handleFileSelect(event)">
+            <div style="margin-top: 1rem; text-align: center;">
+                <button class="btn btn-outline btn-sm" onclick="useSampleData()">
+                    <i class="fas fa-database"></i> Usar Dados de Exemplo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="brand">
+            <div class="brand-logo">NA</div>
+            <div class="brand-text">
+                <h1>Mix Validade - PCEP</h1>
+                <span>Neon Analytics Pro</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="status-pill" id="connectionStatus">
+                <span class="status-dot loading" id="statusDot"></span>
+                <span id="statusText">Sincronizando...</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="syncData()" id="syncBtn">
+                <i class="fas fa-sync-alt"></i> Sincronizar
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openImportModal()">
+                <i class="fas fa-file-import"></i> Importar
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="exportData()">
+                <i class="fas fa-file-export"></i> Exportar
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card animate-in">
+                <div class="stat-icon blue"><i class="fas fa-boxes"></i></div>
+                <div class="stat-label">Estoque Ativo</div>
+                <div class="stat-value" id="statActive">--</div>
+                <div class="stat-sub"><span class="stat-percent" id="percentActive">0%</span> Total de registros</div>
+            </div>
+            <div class="stat-card success animate-in">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-label">Disponíveis</div>
+                <div class="stat-value" id="statAvailable">--</div>
+                <div class="stat-sub positive"><span class="stat-percent" id="percentAvailable">0%</span> Sem bloqueio</div>
+            </div>
+            <div class="stat-card warning animate-in">
+                <div class="stat-icon yellow"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="stat-label">Avarias</div>
+                <div class="stat-value" id="statDamaged">--</div>
+                <div class="stat-sub"><span class="stat-percent" id="percentDamaged">0%</span> Unidades danificadas</div>
+            </div>
+            <div class="stat-card danger animate-in">
+                <div class="stat-icon red"><i class="fas fa-lock"></i></div>
+                <div class="stat-label">Bloqueados</div>
+                <div class="stat-value" id="statBlocked">--</div>
+                <div class="stat-sub negative"><span class="stat-percent" id="percentBlocked">0%</span> Requer atenção</div>
+            </div>
+        </div>
+
+        <!-- Zones Section -->
+        <div class="zones-grid">
+            <div class="zone-card animate-in">
+                <div class="zone-header">
+                    <span class="zone-title green"><i class="fas fa-leaf"></i> Zona Verde</span>
+                    <span class="zone-badge green">+30 dias</span>
+                </div>
+                <div class="zone-progress">
+                    <div class="zone-progress-bar green" id="zoneGreenBar" style="width: 0%"></div>
+                </div>
+                <div class="zone-stats">
+                    <span class="zone-label">Lotes seguros</span>
+                    <span class="zone-count" id="zoneGreenCount">--</span>
+                </div>
+            </div>
+            <div class="zone-card animate-in">
+                <div class="zone-header">
+                    <span class="zone-title yellow"><i class="fas fa-clock"></i> Atenção</span>
+                    <span class="zone-badge yellow">10-30 dias</span>
+                </div>
+                <div class="zone-progress">
+                    <div class="zone-progress-bar yellow" id="zoneYellowBar" style="width: 0%"></div>
+                </div>
+                <div class="zone-stats">
+                    <span class="zone-label">Monitorar</span>
+                    <span class="zone-count" id="zoneYellowCount">--</span>
+                </div>
+            </div>
+            <div class="zone-card animate-in">
+                <div class="zone-header">
+                    <span class="zone-title red"><i class="fas fa-exclamation-circle"></i> Zona Vermelha</span>
+                    <span class="zone-badge red">&lt;10 dias</span>
+                </div>
+                <div class="zone-progress">
+                    <div class="zone-progress-bar red" id="zoneRedBar" style="width: 0%"></div>
+                </div>
+                <div class="zone-stats">
+                    <span class="zone-label">Crítico</span>
+                    <span class="zone-count" id="zoneRedCount">--</span>
+                </div>
+            </div>
+            <div class="zone-card animate-in">
+                <div class="zone-header">
+                    <span class="zone-title gray"><i class="fas fa-skull"></i> Vencidos</span>
+                    <span class="zone-badge gray">Expirados</span>
+                </div>
+                <div class="zone-progress">
+                    <div class="zone-progress-bar gray" id="zoneExpiredBar" style="width: 0%"></div>
+                </div>
+                <div class="zone-stats">
+                    <span class="zone-label">Baixar</span>
+                    <span class="zone-count" id="zoneExpiredCount">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Banner -->
+        <div class="critical-banner" id="criticalBanner" style="display:none;">
+            <i class="fas fa-bell"></i>
+            <div class="critical-banner-content">
+                <h4>⚠️ Itens Críticos Detectados</h4>
+                <p id="criticalMessage">Produtos com validade próxima requerem atenção imediata.</p>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="applyCriticalFilter()">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar código, descrição ou depósito..." onkeyup="filterTable()">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="setFilter('all')"><i class="fas fa-list"></i> Todos</button>
+                <button class="filter-btn" onclick="setFilter('7days')"><i class="fas fa-calendar-week"></i> 7 dias</button>
+                <button class="filter-btn" onclick="setFilter('30days')"><i class="fas fa-calendar-month"></i> 30 dias</button>
+                <button class="filter-btn" onclick="setFilter('highturn')"><i class="fas fa-fire"></i> Giro Alto</button>
+                <button class="filter-btn danger" onclick="setFilter('critical')"><i class="fas fa-exclamation"></i> Crítico</button>
+                <button class="btn btn-outline btn-sm" onclick="clearFilters()"><i class="fas fa-times"></i> Limpar</button>
+                <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+            </div>
+        </div>
+
+        <!-- Main Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <span class="table-title"><i class="fas fa-box-open"></i> Produtos por Validade</span>
+                <div class="table-actions">
+                    <button class="action-btn" onclick="refreshData()"><i class="fas fa-rotate"></i> Atualizar</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th>Depósito</th><th>Código</th><th>Descrição</th><th>Validade</th>
+                            <th>Disponível</th><th>Avaria</th><th>Bloqueado</th><th>Giro/Dia</th><th>Situação</th><th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+                <div class="empty-state" id="emptyState" style="display:none;">
+                    <i class="fas fa-inbox"></i><p>Nenhum produto encontrado com os filtros aplicados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired Products Section -->
+        <div class="table-container" id="expiredSection" style="display:none;">
+            <div class="table-header">
+                <span class="table-title" style="color:var(--danger)"><i class="fas fa-skull-crossbones"></i> Produtos Vencidos</span>
+                <span class="status-badge danger" id="expiredCountBadge">0 lotes</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Depósito</th><th>Código</th><th>Descrição</th><th>Validade</th>
+                            <th>Disponível</th><th>Avaria</th><th>Bloqueado</th><th>Dias Vencido</th><th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expiredBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>
+            <i class="fas fa-sync-alt"></i> Auto-sync: <strong>5min</strong> • 
+            <i class="fas fa-keyboard"></i> Ctrl+F Busca • 
+            <i class="fas fa-file-export"></i> Ctrl+E Exportar • 
+            Atualizado: <strong id="lastUpdate">--:--:--</strong>
+        </p>
+    </footer>
+
+    <script>
+        // ============ CONFIGURAÇÃO - URL CSV DO GOOGLE SHEETS ============
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTTbDemfwAw-yIPgp9TCKDynQy2s-7yo57v4m5-5knXyBNFBwCyH5iBqL-93TZ6HLg5Uod5wxSwo_pu/pub?gid=641828317&single=true&output=csv';
+        
+        // ============ ESTADO GLOBAL ============
+        let allData = [];
+        let filteredData = [];
+        let currentFilter = 'all';
+        let isInitialLoad = true;
+
+        // ============ INICIALIZAÇÃO ============
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTimestamp();
+            loadData(); // Tenta carregar da URL
+            setupKeyboardShortcuts();
+            setupAutoRefresh();
+            setupDragAndDrop();
+        });
+
+        // ============ PARSE CSV ============
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                if (values.length >= 8) {
+                    data.push({
+                        deposito: values[0] || '',
+                        codigo: values[1] || '',
+                        descricao: values[2] || '',
+                        validade: parseDate(values[3]),
+                        disponivel: parseInt(values[4]) || 0,
+                        avaria: parseInt(values[5]) || 0,
+                        bloqueado: parseInt(values[6]) || 0,
+                        giro: parseInt(values[7]) || 0
+                    });
+                }
+            }
+            return data;
+        }
+
+        function parseDate(dateStr) {
+            // Tenta converter vários formatos de data
+            if (!dateStr) return new Date().toISOString().split('T')[0];
+            
+            // Formato DD/MM/YYYY
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+            
+            // Formato YYYY-MM-DD
+            if (dateStr.includes('-') && dateStr.length === 10) {
+                return dateStr;
+            }
+            
+            // Tenta converter com Date
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                return d.toISOString().split('T')[0];
+            }
+            
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ============ CARREGAR DADOS ============
+        async function loadData(showLoading = true) {
+            if (showLoading) showLoadingOverlay(true);
+            updateConnectionStatus('loading', 'Sincronizando...');
+            
+            try {
+                // Usa CORS proxy para acessar Google Sheets
+                const proxyUrls = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
+                    CSV_URL // tenta direto também
+                ];
+                
+                let response = null;
+                let lastError = null;
+                
+                for (const url of proxyUrls) {
+                    try {
+                        response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'text/csv, text/plain, */*'
+                            },
+                            signal: AbortSignal.timeout(15000)
+                        });
+                        if (response.ok) break;
+                    } catch (e) {
+                        lastError = e;
+                        continue;
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('Não foi possível acessar a planilha');
+                }
+                
+                const csvText = await response.text();
+                
+                if (csvText && csvText.length > 0 && csvText.includes(',')) {
+                    allData = parseCSV(csvText);
+                    if (allData.length > 0) {
+                        applyFilters();
+                        updateStats();
+                        updateZones();
+                        updateTimestamp();
+                        updateConnectionStatus('connected', 'Sincronizado');
+                        
+                        if (isInitialLoad) {
+                            showLoadingOverlay(false);
+                            isInitialLoad = false;
+                        }
+                        return;
+                    }
+                }
+                
+                throw new Error('CSV vazio ou formato inválido');
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar:', error);
+                updateConnectionStatus('error', 'Erro de conexão');
+                
+                if (isInitialLoad) {
+                    // Mostra modal de importação ao invés de dados de exemplo automáticos
+                    showLoadingOverlay(false);
+                    openImportModal();
+                    isInitialLoad = false;
+                }
+            }
+        }
+
+        // ============ DADOS DE EXEMPLO ============
+        function useSampleData() {
+            allData = [
+                { deposito: 'SP-CENTRAL', codigo: 'PRD-8821', descricao: 'Leite UHT Integral 1L', validade: '2026-04-15', disponivel: 240, avaria: 2, bloqueado: 0, giro: 45 },
+                { deposito: 'RJ-NORTE', codigo: 'PRD-4412', descricao: 'Água Mineral 500ml', validade: '2026-08-22', disponivel: 1200, avaria: 0, bloqueado: 0, giro: 89 },
+                { deposito: 'MG-SUL', codigo: 'PRD-9903', descricao: 'Iogurte Natural 170g', validade: '2026-04-05', disponivel: 86, avaria: 5, bloqueado: 12, giro: 23 },
+                { deposito: 'RS-PORTO', codigo: 'PRD-2156', descricao: 'Café Torrado 500g', validade: '2026-12-12', disponivel: 450, avaria: 0, bloqueado: 0, giro: 12 },
+                { deposito: 'BA-SALVADOR', codigo: 'PRD-7734', descricao: 'Suco de Laranja 1L', validade: '2026-03-28', disponivel: 34, avaria: 8, bloqueado: 34, giro: 5 }
+            ];
+            closeImportModal();
+            applyFilters();
+            updateStats();
+            updateZones();
+            updateConnectionStatus('connected', 'Dados de exemplo');
+        }
+
+        // ============ IMPORTAR ARQUIVO ============
+        function openImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+        }
+
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) processFile(files[0]);
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) processFile(file);
+        }
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csvText = e.target.result;
+                    allData = parseCSV(csvText);
+                    if (allData.length > 0) {
+                        closeImportModal();
+                        applyFilters();
+                        updateStats();
+                        updateZones();
+                        updateTimestamp();
+                        updateConnectionStatus('connected', 'Importado: ' + file.name);
+                        alert(`✅ ${allData.length} registros importados com sucesso!`);
+                    } else {
+                        alert('❌ Nenhum dado válido encontrado no arquivo');
+                    }
+                } catch (err) {
+                    alert('❌ Erro ao processar arquivo: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============ ATUALIZAR ESTATÍSTICAS ============
+        function updateStats() {
+            const total = allData.length;
+            const available = allData.filter(d => d.bloqueado === 0).length;
+            const damaged = allData.reduce((sum, d) => sum + (d.avaria || 0), 0);
+            const blocked = allData.filter(d => d.bloqueado > 0).length;
+
+            document.getElementById('statActive').textContent = total.toLocaleString('pt-BR');
+            document.getElementById('statAvailable').textContent = available.toLocaleString('pt-BR');
+            document.getElementById('statDamaged').textContent = damaged.toLocaleString('pt-BR');
+            document.getElementById('statBlocked').textContent = blocked.toLocaleString('pt-BR');
+            
+            document.getElementById('percentActive').textContent = total > 0 ? '100%' : '0%';
+            document.getElementById('percentAvailable').textContent = total > 0 ? Math.round((available/total)*100) + '%' : '0%';
+            document.getElementById('percentDamaged').textContent = total > 0 ? Math.round((damaged/(allData.reduce((s,d)=>s+d.disponivel,0)+1))*100) + '%' : '0%';
+            document.getElementById('percentBlocked').textContent = total > 0 ? Math.round((blocked/total)*100) + '%' : '0%';
+        }
+
+        // ============ ATUALIZAR ZONAS ============
+        function updateZones() {
+            const today = new Date();
+            const zones = { green: 0, yellow: 0, red: 0, expired: 0 };
+
+            allData.forEach(item => {
+                const expiry = new Date(item.validade);
+                const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                if (daysLeft < 0) zones.expired++;
+                else if (daysLeft < 10) zones.red++;
+                else if (daysLeft < 30) zones.yellow++;
+                else zones.green++;
+            });
+
+            const total = allData.length || 1;
+            document.getElementById('zoneGreenCount').textContent = zones.green;
+            document.getElementById('zoneYellowCount').textContent = zones.yellow;
+            document.getElementById('zoneRedCount').textContent = zones.red;
+            document.getElementById('zoneExpiredCount').textContent = zones.expired;
+            
+            document.getElementById('zoneGreenBar').style.width = `${(zones.green/total)*100}%`;
+            document.getElementById('zoneYellowBar').style.width = `${(zones.yellow/total)*100}%`;
+            document.getElementById('zoneRedBar').style.width = `${(zones.red/total)*100}%`;
+            document.getElementById('zoneExpiredBar').style.width = `${(zones.expired/total)*100}%`;
+
+            const critical = zones.red + zones.expired;
+            const banner = document.getElementById('criticalBanner');
+            if (critical > 0) {
+                banner.style.display = 'flex';
+                document.getElementById('criticalMessage').textContent = `${critical} produtos requerem atenção imediata.`;
+            } else {
+                banner.style.display = 'none';
+            }
+
+            const expiredSection = document.getElementById('expiredSection');
+            if (zones.expired > 0) {
+                expiredSection.style.display = 'block';
+                document.getElementById('expiredCountBadge').textContent = `${zones.expired} lotes`;
+                renderExpiredItems();
+            } else {
+                expiredSection.style.display = 'none';
+            }
+        }
+
+        // ============ RENDERIZAR TABELA ============
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            const today = new Date();
+            tbody.innerHTML = data.map(item => {
+                const expiry = new Date(item.validade);
+                const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                const dateStr = item.validade.split('-').reverse().join('/');
+                
+                let statusClass, statusText, dateClass, rowClass = '';
+                if (daysLeft < 0) { statusClass = 'danger'; statusText = 'Vencido'; dateClass = 'expired'; rowClass = 'critical'; }
+                else if (daysLeft < 10) { statusClass = 'danger'; statusText = `${daysLeft}d`; dateClass = 'soon'; rowClass = 'critical'; }
+                else if (daysLeft < 30) { statusClass = 'warning'; statusText = `${daysLeft}d`; dateClass = 'soon'; rowClass = 'warning-row'; }
+                else { statusClass = 'ok'; statusText = 'OK'; dateClass = 'safe'; }
+
+                return `<tr class="${rowClass}">
+                    <td>${item.deposito}</td>
+                    <td class="code-cell">${item.codigo}</td>
+                    <td>${item.descricao}</td>
+                    <td class="expiry-date ${dateClass}">${dateStr}</td>
+                    <td>${item.disponivel} un</td>
+                    <td>${item.avaria||0}</td>
+                    <td>${item.bloqueado||0}</td>
+                    <td>${item.giro||0}</td>
+                    <td><span class="status-badge ${statusClass}"><i class="fas fa-${statusClass==='ok'?'check':statusClass==='warning'?'clock':'exclamation'}"></i> ${statusText}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="viewItem('${item.codigo}')"><i class="fas fa-eye"></i></button>
+                        ${daysLeft < 0 ? `<button class="action-btn danger" onclick="writeOff('${item.codigo}')"><i class="fas fa-trash"></i></button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderExpiredItems() {
+            const today = new Date();
+            const expired = allData.filter(item => new Date(item.validade) < today);
+            const tbody = document.getElementById('expiredBody');
+            tbody.innerHTML = expired.map(item => {
+                const expiry = new Date(item.validade);
+                const daysExpired = Math.floor((today - expiry) / (1000 * 60 * 60 * 24));
+                const dateStr = item.validade.split('-').reverse().join('/');
+                return `<tr>
+                    <td>${item.deposito}</td><td class="code-cell">${item.codigo}</td><td>${item.descricao}</td>
+                    <td class="expiry-date expired">${dateStr}</td><td>${item.disponivel} un</td>
+                    <td>${item.avaria||0}</td><td>${item.bloqueado||0}</td>
+                    <td style="color:var(--danger);font-weight:600">${daysExpired}d</td>
+                    <td><button class="action-btn danger" onclick="writeOff('${item.codigo}')"><i class="fas fa-trash"></i> Baixar</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ============ FILTROS ============
+        function applyFilters() {
+            let filtered = [...allData];
+            const today = new Date();
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            if (search) {
+                filtered = filtered.filter(item => 
+                    item.codigo.toLowerCase().includes(search) ||
+                    item.descricao.toLowerCase().includes(search) ||
+                    item.deposito.toLowerCase().includes(search)
+                );
+            }
+
+            switch(currentFilter) {
+                case '7days':
+                    filtered = filtered.filter(item => {
+                        const days = Math.ceil((new Date(item.validade) - today) / (1000*60*60*24));
+                        return days >= 0 && days <= 7;
+                    }); break;
+                case '30days':
+                    filtered = filtered.filter(item => {
+                        const days = Math.ceil((new Date(item.validade) - today) / (1000*60*60*24));
+                        return days >= 0 && days <= 30;
+                    }); break;
+                case 'highturn':
+                    filtered = filtered.filter(item => item.giro >= 30); break;
+                case 'critical':
+                    filtered = filtered.filter(item => {
+                        const days = Math.ceil((new Date(item.validade) - today) / (1000*60*60*24));
+                        return days < 30 || item.bloqueado > 0;
+                    }); break;
+            }
+            filteredData = filtered;
+            renderTable(filtered);
+        }
+
+        function setFilter(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            applyFilters();
+        }
+        function clearFilters() {
+            currentFilter = 'all';
+            document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-btn:first-child').classList.add('active');
+            applyFilters();
+        }
+        function filterTable() { applyFilters(); }
+        function applyCriticalFilter() { 
+            currentFilter = 'critical';
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-btn.danger').classList.add('active');
+            applyFilters();
+        }
+
+        // ============ AÇÕES ============
+        function viewItem(code) {
+            const item = allData.find(d => d.codigo === code);
+            if (item) alert(`📦 ${item.codigo}\n\n${item.descricao}\n\nDepósito: ${item.deposito}\nValidade: ${item.validade}\nDisponível: ${item.disponivel}\nGiro/Dia: ${item.giro}`);
+        }
+        function writeOff(code) {
+            if (confirm(`Confirmar baixa do produto ${code}?`)) {
+                alert(`✅ Produto ${code} marcado para baixa.`);
+                loadData(false);
+            }
+        }
+        async function syncData() {
+            const btn = document.getElementById('syncBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+            btn.disabled = true;
+            await loadData();
+            btn.innerHTML = original;
+            btn.disabled = false;
+        }
+        function refreshData() { loadData(); }
+        function exportData() { 
+            const csv = generateCSV();
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `mix-validade-export-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        function exportCSV() {
+            const csv = generateCSV();
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob);
+            a.download = `mix-validade-${new Date().toISOString().split('T')[0]}.csv`; 
+            a.click();
+        }
+        
+        function generateCSV() {
+            const headers = ['Depósito','Código','Descrição','Validade','Disponível','Avaria','Bloqueado','Giro/Dia'];
+            const rows = filteredData.map(d => [
+                d.deposito, d.codigo, d.descricao, d.validade, 
+                d.disponivel, d.avaria||0, d.bloqueado||0, d.giro||0
+            ]);
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+        
+        function importData() { openImportModal(); }
+
+        // ============ UTILITÁRIOS ============
+        function showLoadingOverlay(show) {
+            document.getElementById('loadingOverlay').classList.toggle('active', show);
+        }
+        function updateConnectionStatus(status, text) {
+            const dot = document.getElementById('statusDot');
+            const label = document.getElementById('statusText');
+            dot.className = 'status-dot';
+            if (status === 'error') dot.classList.add('error');
+            else if (status === 'loading') dot.classList.add('loading');
+            label.textContent = text;
+        }
+        function updateTimestamp() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+        }
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+                if (e.ctrlKey && e.key === 'e') { e.preventDefault(); exportData(); }
+                if (e.key === 'Escape') {
+                    if (document.getElementById('importModal').classList.contains('active')) {
+                        closeImportModal();
+                    } else {
+                        clearFilters();
+                    }
+                }
+            });
+        }
+        function setupAutoRefresh() {
+            setInterval(() => loadData(false), 5 * 60 * 1000);
+        }
+    </script>
+</body>
+</html>
